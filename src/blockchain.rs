@@ -1,4 +1,4 @@
-use crate::crypto::{Hash, ZERO_HASH, calculate_hash, hash_matches_difficulty};
+use crate::crypto::{Hash, ZERO_HASH, calculate_hash, hash_matches_difficulty, hex_digest};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 // TODO: Reimplement the Transaction struct later
@@ -37,7 +37,7 @@ impl Header {
 }
 
 impl Block {
-    fn new(data: Transaction, previous_hash: Hash, height: u64) -> Self {
+    pub fn new(data: Transaction, previous_hash: Hash, height: u64) -> Self {
         let timestamp: u64 = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
@@ -57,7 +57,7 @@ impl Block {
         }
     }
 
-    fn mine(mut self, difficulty: u32) -> Self {
+    pub fn mine(mut self, difficulty: u32) -> Self {
         loop {
             self.hash = calculate_hash(&self.header.to_bytes());
 
@@ -71,12 +71,18 @@ impl Block {
 }
 
 impl Blockchain {
-    fn new() -> Self {
+    pub fn new() -> Self {
         let genesis_data = "Genesis Block".to_string();
         let genesis_block = Block::new(genesis_data, ZERO_HASH, 0).mine(3);
 
         Self {
             chain: vec![genesis_block]
+        }
+    }
+
+    pub fn dump(self) {
+        for block in self.chain.iter() {
+            println!("{}", hex_digest(&block.hash));
         }
     }
 }

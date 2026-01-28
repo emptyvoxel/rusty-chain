@@ -26,3 +26,10 @@ pub fn calculate_hash(data: &Vec<u8>) -> Hash {
 
     return hasher.finalize().into();
 }
+
+pub fn hex_digest(hash: &Hash) -> String {
+    hash
+        .iter()
+        .map(|byte| format!("{:02x}", byte))
+        .collect()
+}
