@@ -23,6 +23,6 @@ pub fn hash_matches_difficulty(hash: &Hash, difficulty: u32) -> bool {
 pub fn calculate_hash(data: &Vec<u8>) -> Hash {
     let mut hasher = Sha256::new();
     hasher.update(data);
-    
+
     return hasher.finalize().into();
 }

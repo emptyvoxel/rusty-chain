@@ -27,10 +27,10 @@ impl Header {
         let mut bytes: Vec<u8> = Vec::with_capacity(56);
 
         // Same order as the struct for simplicity
-        bytes.extend_from_slice(&self.timestamp.to_be_bytes());        
+        bytes.extend_from_slice(&self.timestamp.to_be_bytes());
         bytes.extend_from_slice(&self.previous_hash);
-        bytes.extend_from_slice(&self.height.to_be_bytes());        
-        bytes.extend_from_slice(&self.nonce.to_be_bytes());        
+        bytes.extend_from_slice(&self.height.to_be_bytes());
+        bytes.extend_from_slice(&self.nonce.to_be_bytes());
 
         return bytes;
     }
