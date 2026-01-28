@@ -4,20 +4,22 @@ pub type Hash = [u8; 32];
 pub const ZERO_HASH: Hash = [0u8; 32];
 
 pub fn hash_matches_difficulty(hash: &Hash, difficulty: u32) -> bool {
-    let mut remaining: u32 = difficulty;
+    let mut count: u32 = 0;
 
     for byte in hash.iter() {
-        if remaining == 0 { return true; }
+        let zeros = byte.leading_zeros();
+        count += zeros;
 
-        let zeros: u32 = byte.leading_zeros();
+        if count >= difficulty {
+            return true;
+        }
 
-        if zeros >= remaining { return true; }
-        if *byte != 0 { return false; }
-
-        remaining -= 8;
+        if zeros < 8 {
+            return false;
+        }
     }
 
-    return true;
+    return false;
 }
 
 pub fn calculate_hash(data: &Vec<u8>) -> Hash {

@@ -1,4 +1,4 @@
-use crate::crypto::{Hash, ZERO_HASH, calculate_hash};
+use crate::crypto::{Hash, ZERO_HASH, calculate_hash, hex_digest};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Clone)]
@@ -45,6 +45,14 @@ impl Transaction {
         bytes.extend_from_slice(&self.timestamp.to_be_bytes());
 
         return calculate_hash(&bytes);
+    }
+
+    pub fn dump(self) {
+        println!("Transaction {}", hex_digest(&self.hash));
+        println!(
+            "-> Content: {} sent {} to {} at {}",
+            self.sender, self.value, self.receiver, self.timestamp
+        );
     }
 }
 

@@ -13,6 +13,9 @@ use crate::{
 };
 use std::time::{SystemTime, UNIX_EPOCH};
 
+const DIFFICULTY: u32 = 20; // 5 hex zeros
+
+#[derive(Clone)]
 pub struct Header {
     timestamp: u64,
     previous_hash: Hash,
@@ -21,6 +24,7 @@ pub struct Header {
     merkle_root: Hash
 }
 
+#[derive(Clone)]
 pub struct Block {
     header: Header,
     data: Vec<Transaction>,
@@ -41,6 +45,7 @@ impl Header {
         bytes.extend_from_slice(&self.previous_hash);
         bytes.extend_from_slice(&self.height.to_be_bytes());
         bytes.extend_from_slice(&self.nonce.to_be_bytes());
+        bytes.extend_from_slice(&self.merkle_root);
 
         return bytes;
     }
@@ -79,6 +84,23 @@ impl Block {
             self.header.nonce += 1;
         }
     }
+
+    pub fn dump(self) {
+        println!("BEGIN BLOCK N. {}", self.header.height);
+        println!("Timestamp: {}", self.header.timestamp);
+        println!("Previous Block: {}", hex_digest(&self.header.previous_hash));
+
+        println!("BEGIN CONTENT");
+        for transaction in self.data {
+            transaction.dump();
+        }
+        println!("END CONTENT");
+
+        println!("Merkle root: {}", hex_digest(&self.header.merkle_root));
+        println!("Proof-of-work: {}", self.header.nonce);
+        println!("Hash: {}", hex_digest(&self.hash));
+        println!("END BLOCK N. {}", self.header.height);
+    }
 }
 
 impl Blockchain {
@@ -88,7 +110,7 @@ impl Blockchain {
             transaction,
             ZERO_HASH,
             0
-        ).mine(3);
+        ).mine(DIFFICULTY);
 
         Self {
             chain: vec![genesis_block]
@@ -97,7 +119,7 @@ impl Blockchain {
 
     pub fn dump(self) {
         for block in self.chain.iter() {
-            println!("{}", hex_digest(&block.hash));
+            block.clone().dump();
         }
     }
 }
