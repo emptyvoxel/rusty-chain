@@ -50,7 +50,7 @@ impl Transaction {
     pub fn dump(self) {
         println!("Transaction {}", hex_digest(&self.hash));
         println!(
-            "-> Content: {} sent {} to {} at {}",
+            ">>> Content: {} sent {} to {} at {}",
             self.sender, self.value, self.receiver, self.timestamp
         );
     }

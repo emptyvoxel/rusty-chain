@@ -33,7 +33,7 @@ pub struct Block {
 
 pub struct Blockchain {
     chain: Vec<Block>,
-    // pending: Vec<Transaction>
+    pending_transactions: Vec<Transaction>
 }
 
 impl Header {
@@ -86,20 +86,20 @@ impl Block {
     }
 
     pub fn dump(self) {
-        println!("BEGIN BLOCK N. {}", self.header.height);
+        println!("< BEGIN BLOCK N. {}: ", self.header.height);
         println!("Timestamp: {}", self.header.timestamp);
         println!("Previous Block: {}", hex_digest(&self.header.previous_hash));
 
-        println!("BEGIN CONTENT");
+        println!("<< BEGIN TRANSACTIONS");
         for transaction in self.data {
             transaction.dump();
         }
-        println!("END CONTENT");
+        println!(">> END TRANSACTIONS");
 
         println!("Merkle root: {}", hex_digest(&self.header.merkle_root));
         println!("Proof-of-work: {}", self.header.nonce);
         println!("Hash: {}", hex_digest(&self.hash));
-        println!("END BLOCK N. {}", self.header.height);
+        println!("> END BLOCK N. {}", self.header.height);
     }
 }
 
@@ -113,8 +113,34 @@ impl Blockchain {
         ).mine(DIFFICULTY);
 
         Self {
-            chain: vec![genesis_block]
+            chain: vec![genesis_block],
+            pending_transactions: Vec::new()
         }
+    }
+
+    pub fn add_transaction(&mut self, transaction: Transaction) {
+        self.pending_transactions.push(transaction);
+    }
+
+    pub fn mine_pending_transactions(&mut self) {
+        if self.pending_transactions.is_empty() { return; }
+
+        let previous_hash = self
+            .chain
+            .last()
+            .unwrap()
+            .hash;
+
+        let height = self.chain.len() as u64;
+
+        let block = Block::new(
+            self.pending_transactions.clone(),
+            previous_hash,
+            height
+        ).mine(DIFFICULTY);
+
+        self.chain.push(block);
+        self.pending_transactions.clear();
     }
 
     pub fn dump(self) {
