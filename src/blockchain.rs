@@ -1,19 +1,29 @@
-use crate::crypto::{Hash, ZERO_HASH, calculate_hash, hash_matches_difficulty, hex_digest};
+use crate::{
+    crypto::{
+        Hash,
+        ZERO_HASH,
+        calculate_hash,
+        hash_matches_difficulty,
+        hex_digest
+    },
+    transaction::{
+        Transaction,
+        calculate_merkle_root
+    }
+};
 use std::time::{SystemTime, UNIX_EPOCH};
-
-// TODO: Reimplement the Transaction struct later
-type Transaction = String;
 
 pub struct Header {
     timestamp: u64,
     previous_hash: Hash,
     height: u64,
-    nonce: u64
+    nonce: u64,
+    merkle_root: Hash
 }
 
 pub struct Block {
     header: Header,
-    data: Transaction,
+    data: Vec<Transaction>,
     hash: Hash
 }
 
@@ -37,7 +47,7 @@ impl Header {
 }
 
 impl Block {
-    pub fn new(data: Transaction, previous_hash: Hash, height: u64) -> Self {
+    pub fn new(data: Vec<Transaction>, previous_hash: Hash, height: u64) -> Self {
         let timestamp: u64 = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
@@ -47,7 +57,8 @@ impl Block {
             timestamp: timestamp,
             previous_hash: previous_hash,
             height: height,
-            nonce: 0
+            nonce: 0,
+            merkle_root: calculate_merkle_root(&data)
         };
 
         Self {
@@ -72,8 +83,12 @@ impl Block {
 
 impl Blockchain {
     pub fn new() -> Self {
-        let genesis_data = "Genesis Block".to_string();
-        let genesis_block = Block::new(genesis_data, ZERO_HASH, 0).mine(3);
+        let transaction = vec![Transaction::genesis()];
+        let genesis_block = Block::new(
+            transaction,
+            ZERO_HASH,
+            0
+        ).mine(3);
 
         Self {
             chain: vec![genesis_block]

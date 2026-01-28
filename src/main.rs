@@ -1,3 +1,4 @@
+mod transaction;
 mod blockchain;
 mod crypto;
 
