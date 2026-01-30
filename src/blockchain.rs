@@ -15,7 +15,6 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 const DIFFICULTY: u32 = 20; // 5 hex zeros
 
-#[derive(Clone)]
 pub struct Header {
     timestamp: u64,
     previous_hash: Hash,
@@ -24,7 +23,6 @@ pub struct Header {
     merkle_root: Hash
 }
 
-#[derive(Clone)]
 pub struct Block {
     header: Header,
     data: Vec<Transaction>,
@@ -85,13 +83,13 @@ impl Block {
         }
     }
 
-    pub fn dump(self) {
+    pub fn dump(&self) {
         println!("< BEGIN BLOCK N. {}: ", self.header.height);
         println!("Timestamp: {}", self.header.timestamp);
         println!("Previous Block: {}", hex_digest(&self.header.previous_hash));
 
         println!("<< BEGIN TRANSACTIONS");
-        for transaction in self.data {
+        for transaction in &self.data {
             transaction.dump();
         }
         println!(">> END TRANSACTIONS");
@@ -145,7 +143,7 @@ impl Blockchain {
 
     pub fn dump(self) {
         for block in self.chain.iter() {
-            block.clone().dump();
+            block.dump();
         }
     }
 }
