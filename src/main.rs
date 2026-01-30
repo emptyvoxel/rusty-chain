@@ -1,5 +1,6 @@
 mod transaction;
 mod blockchain;
+mod wallet;
 mod crypto;
 
 fn main() {
