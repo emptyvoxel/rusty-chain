@@ -11,27 +11,29 @@ use crate::{
         calculate_merkle_root
     }
 };
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{time::{SystemTime, UNIX_EPOCH}};
 
-const DIFFICULTY: u32 = 20; // 5 hex zeros
-
+// Making everything public makes it easier to test tampering with the chain.
 pub struct Header {
-    timestamp: u64,
-    previous_hash: Hash,
-    height: u64,
-    nonce: u64,
-    merkle_root: Hash
+    pub timestamp: u64,
+    pub previous_hash: Hash,
+    pub height: u64,
+    pub nonce: u64,
+    pub merkle_root: Hash
 }
 
+// Making everything public makes it easier to test tampering with the chain.
 pub struct Block {
-    header: Header,
-    data: Vec<Transaction>,
-    hash: Hash
+    pub header: Header,
+    pub data: Vec<Transaction>,
+    pub hash: Hash
 }
 
+// Making everything public makes it easier to test tampering with the chain.
 pub struct Blockchain {
-    chain: Vec<Block>,
-    pending_transactions: Vec<Transaction>
+    pub chain: Vec<Block>,
+    pub pending_transactions: Vec<Transaction>,
+    pub difficulty: u32
 }
 
 impl Header {
@@ -71,6 +73,24 @@ impl Block {
         }
     }
 
+    pub fn genesis() -> Self {
+        let transactions = vec![Transaction::genesis()];
+
+        let header = Header {
+            timestamp: 0,
+            previous_hash: ZERO_HASH,
+            height: 0,
+            nonce: 0,
+            merkle_root: calculate_merkle_root(&transactions)
+        };
+
+        Self {
+            header: header,
+            data: transactions,
+            hash: ZERO_HASH
+        }
+    }
+
     pub fn mine(mut self, difficulty: u32) -> Self {
         loop {
             self.hash = calculate_hash(&self.header.to_bytes());
@@ -102,17 +122,13 @@ impl Block {
 }
 
 impl Blockchain {
-    pub fn new() -> Self {
-        let transaction = vec![Transaction::genesis()];
-        let genesis_block = Block::new(
-            transaction,
-            ZERO_HASH,
-            0
-        ).mine(DIFFICULTY);
+    pub fn new(difficulty: u32) -> Self {
+        let genesis_block = Block::genesis().mine(difficulty);
 
         Self {
             chain: vec![genesis_block],
-            pending_transactions: Vec::new()
+            pending_transactions: Vec::new(),
+            difficulty
         }
     }
 
@@ -136,15 +152,47 @@ impl Blockchain {
             self.pending_transactions.clone(),
             previous_hash,
             height
-        ).mine(DIFFICULTY);
+        ).mine(self.difficulty);
 
         self.chain.push(block);
         self.pending_transactions.clear();
     }
 
     pub fn dump(self) {
+        if let Err(message) = self.is_valid() {
+            println!("Error: {}", message);
+            return;
+        }
+
         for block in self.chain.iter() {
             block.dump();
         }
+    }
+
+    pub fn is_valid(&self) -> Result<(), String> {
+        for i in 1..self.chain.len() {
+            let current = &self.chain[i];
+            let previous = &self.chain[i-1];
+
+            if current.header.previous_hash != previous.hash {
+                return Err(format!("Invalid hash chain at block {}...", i));
+            }
+
+            if !hash_matches_difficulty(&current.hash, self.difficulty) {
+                return Err(format!("Insufficient proof of work at block {}...", i));
+            }
+
+            if current.hash != calculate_hash(&current.header.to_bytes()) {
+                return Err(format!("Invalid block hash at block {}...", i));
+            }
+
+            for transaction in &current.data {
+                if !transaction.verify() {
+                    return Err(format!("Invalid transaction at block {}...", i));
+                }
+            }
+        }
+
+        Ok(())
     }
 }

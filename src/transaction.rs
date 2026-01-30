@@ -7,13 +7,14 @@ use std::time::{SystemTime, UNIX_EPOCH};
 pub const GENESIS_TRANSACTION_HASH: Hash = [55, 71, 8, 255, 247, 113, 157, 213, 151, 158, 200, 117, 213, 108, 210, 40, 111, 109, 60, 247, 236, 49, 122, 59, 37, 99, 42, 171, 40, 236, 55, 187];
 pub const GENESIS_MESSAGE: &str = "In Rust We Trust";
 
+// Making everything public makes it easier to test tampering with the chain.
 #[derive(Clone)]
 pub struct Transaction {
-    sender: Bytes,
-    receiver: Bytes,
-    value: u64,
-    timestamp: u64,
-    signature: Bytes,
+    pub sender: Bytes,
+    pub receiver: Bytes,
+    pub value: u64,
+    pub timestamp: u64,
+    pub signature: Bytes,
     pub hash: Hash
 }
 
