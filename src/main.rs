@@ -6,15 +6,19 @@ mod crypto;
 fn main() {
     let mut chain = blockchain::Blockchain::new();
 
+    let alice_wallet = wallet::Wallet::new();
+    let bob_wallet = wallet::Wallet::new();
+    let charlie_wallet = wallet::Wallet::new();
+
     chain.add_transaction(transaction::Transaction::new(
-        "Alice".to_string(),
-        "Bob".to_string(),
+        &alice_wallet,
+        bob_wallet.public_key_bytes(),
         50
     ));
 
     chain.add_transaction(transaction::Transaction::new(
-        "Bob".to_string(),
-        "Charlie".to_string(),
+        &bob_wallet,
+        charlie_wallet.public_key_bytes(),
         20
     ));
 

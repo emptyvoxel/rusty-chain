@@ -36,3 +36,15 @@ pub fn verify_signature(
 ) -> bool {
     public_key.verify(message, signature).is_ok()
 }
+
+pub fn public_key_string(public_key: &[u8]) -> String {
+    if public_key.is_empty() {
+        return "GENESIS".to_string();
+    }
+
+    let hex: String = public_key.iter()
+        .map(|byte| format!("{:02x}", byte))
+        .collect();
+
+    format!("{}...{}", &hex[..8], &hex[hex.len()-8..])
+}

@@ -117,6 +117,7 @@ impl Blockchain {
     }
 
     pub fn add_transaction(&mut self, transaction: Transaction) {
+        assert!(transaction.verify());
         self.pending_transactions.push(transaction);
     }
 

@@ -1,6 +1,7 @@
 use sha2::{Sha256, Digest};
 
 pub type Hash = [u8; 32];
+pub type Bytes = Vec<u8>;
 pub const ZERO_HASH: Hash = [0u8; 32];
 
 pub fn hash_matches_difficulty(hash: &Hash, difficulty: u32) -> bool {

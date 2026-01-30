@@ -1,57 +1,111 @@
-use crate::crypto::{Hash, ZERO_HASH, calculate_hash, hex_digest};
+use k256::ecdsa::{Signature, VerifyingKey};
+
+use crate::crypto::{Hash, Bytes, ZERO_HASH, calculate_hash, hex_digest};
+use crate::wallet::{Wallet, public_key_string, verify_signature};
 use std::time::{SystemTime, UNIX_EPOCH};
+
+pub const GENESIS_TRANSACTION_HASH: Hash = [55, 71, 8, 255, 247, 113, 157, 213, 151, 158, 200, 117, 213, 108, 210, 40, 111, 109, 60, 247, 236, 49, 122, 59, 37, 99, 42, 171, 40, 236, 55, 187];
+pub const GENESIS_MESSAGE: &str = "In Rust We Trust";
 
 #[derive(Clone)]
 pub struct Transaction {
-    sender: String,
-    receiver: String,
+    sender: Bytes,
+    receiver: Bytes,
     value: u64,
     timestamp: u64,
-    hash: Hash
+    signature: Bytes,
+    pub hash: Hash
 }
 
 impl Transaction {
-    pub fn new(sender: String, receiver: String, value: u64) -> Self {
+    pub fn new(sender_wallet: &Wallet, receiver_pubkey: Bytes, value: u64) -> Self {
         let timestamp: u64 = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs();
 
+        let sender = sender_wallet.public_key_bytes();
+
         let mut transaction = Self {
-            sender: sender,
-            receiver: receiver,
-            value: value,
-            timestamp: timestamp,
-            hash: ZERO_HASH
+            sender,
+            value,
+            timestamp,
+            receiver: receiver_pubkey,
+            signature: Vec::new(), // placeholder
+            hash: ZERO_HASH // placeholder
         };
+
+        let signature = sender_wallet.sign(&transaction.to_bytes());
+
+        transaction.signature = signature
+            .to_der()
+            .to_bytes()
+            .to_vec();
 
         transaction.hash = transaction.calculate_hash();
         return transaction;
     }
 
     pub fn genesis() -> Self {
-        Transaction::new(
-            "God".to_string(),
-            "Adam".to_string(),
-            0
-        )
+        Self {
+            sender: Vec::new(),
+            receiver: Vec::new(),
+            value: 0,
+            timestamp: 0,
+            signature: Vec::new(),
+            hash: GENESIS_TRANSACTION_HASH
+        }
+    }
+
+    fn to_bytes(&self) -> Bytes {
+        let mut bytes: Bytes = Vec::new();
+        bytes.extend_from_slice(&self.sender);
+        bytes.extend_from_slice(&self.receiver);
+        bytes.extend_from_slice(&self.value.to_be_bytes());
+        bytes.extend_from_slice(&self.timestamp.to_be_bytes());
+
+        return bytes;
     }
 
     pub fn calculate_hash(&self) -> Hash {
-        let mut bytes: Vec<u8> = Vec::new();
-        bytes.extend_from_slice(self.sender.as_bytes());
-        bytes.extend_from_slice(self.receiver.as_bytes());
-        bytes.extend_from_slice(&self.value.to_be_bytes());
-        bytes.extend_from_slice(&self.timestamp.to_be_bytes());
+        let mut bytes = self.to_bytes();
+        bytes.extend_from_slice(&self.signature);
 
         return calculate_hash(&bytes);
     }
 
+    pub fn verify(&self) -> bool {
+        if self.signature.is_empty() {
+            return self.sender.is_empty() && self.receiver.is_empty();
+        }
+
+        let signature = match Signature::from_der(self.signature.as_ref()) {
+            Ok(s) => s,
+            Err(_) => return false,
+        };
+
+        let public_key = match VerifyingKey::from_sec1_bytes(&self.sender) {
+            Ok(key) => key,
+            Err(_) => return false
+        };
+
+        let message = self.to_bytes();
+        verify_signature(&public_key, &message, &signature)
+    }
+
     pub fn dump(&self) {
+        if self.sender.is_empty() {
+            println!("{}", GENESIS_MESSAGE);
+            return;
+        }
+
+        let sender = public_key_string(&self.sender);
+        let receiver = public_key_string(&self.receiver);
+
         println!("Transaction {}", hex_digest(&self.hash));
         println!(
             "-> Content: {} sent {} to {} at {}",
-            self.sender, self.value, self.receiver, self.timestamp
+            sender, self.value, receiver, self.timestamp
         );
     }
 }
