@@ -84,20 +84,20 @@ impl Block {
     }
 
     pub fn dump(&self) {
-        println!("< BEGIN BLOCK N. {}: ", self.header.height);
-        println!("Timestamp: {}", self.header.timestamp);
-        println!("Previous Block: {}", hex_digest(&self.header.previous_hash));
+        println!("BEGIN BLOCK N. {}: ", self.header.height);
+        println!("\tTimestamp: {}", self.header.timestamp);
+        println!("\tPrevious Block: {}", hex_digest(&self.header.previous_hash));
 
-        println!("<< BEGIN TRANSACTIONS");
+        println!("\tBEGIN TRANSACTIONS");
         for transaction in &self.data {
             transaction.dump();
         }
-        println!(">> END TRANSACTIONS");
+        println!("\tEND TRANSACTIONS");
 
-        println!("Merkle root: {}", hex_digest(&self.header.merkle_root));
-        println!("Proof-of-work: {}", self.header.nonce);
-        println!("Hash: {}", hex_digest(&self.hash));
-        println!("> END BLOCK N. {}", self.header.height);
+        println!("\tMerkle root: {}", hex_digest(&self.header.merkle_root));
+        println!("\tProof-of-work: {}", self.header.nonce);
+        println!("\tHash: {}", hex_digest(&self.hash));
+        println!("END BLOCK N. {}", self.header.height);
     }
 }
 

@@ -95,16 +95,16 @@ impl Transaction {
 
     pub fn dump(&self) {
         if self.sender.is_empty() {
-            println!("{}", GENESIS_MESSAGE);
+            println!("\t\t{}", GENESIS_MESSAGE);
             return;
         }
 
         let sender = public_key_string(&self.sender);
         let receiver = public_key_string(&self.receiver);
 
-        println!("Transaction {}", hex_digest(&self.hash));
+        println!("\t\tTransaction {}", hex_digest(&self.hash));
         println!(
-            "-> Content: {} sent {} to {} at {}",
+            "\t\t-> Content: {} sent {} to {} at {}",
             sender, self.value, receiver, self.timestamp
         );
     }
